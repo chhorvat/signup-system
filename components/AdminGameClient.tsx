@@ -20,6 +20,42 @@ function formatSignupTime(iso: string) {
   } catch { return iso; }
 }
 
+function AttendanceToggle({ signupId, attended }: { signupId: number; attended: number | null }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function setAttended(value: boolean | null) {
+    setLoading(true);
+    try {
+      await fetch(`/api/admin/signups/${signupId}/attend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attended: value }),
+      });
+      router.refresh();
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className={`flex items-center justify-center gap-1 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+      <button
+        onClick={() => setAttended(attended === 1 ? null : true)}
+        title="Mark attended"
+        className={`w-6 h-6 rounded-full text-xs font-bold transition-colors ${attended === 1 ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-green-100 hover:text-green-600'}`}
+      >✓</button>
+      <button
+        onClick={() => setAttended(attended === 0 ? null : false)}
+        title="Mark no-show"
+        className={`w-6 h-6 rounded-full text-xs font-bold transition-colors ${attended === 0 ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-600'}`}
+      >✗</button>
+    </div>
+  );
+}
+
 export default function AdminGameClient({ gameDay, confirmed, waitlist }: Props) {
   const router = useRouter();
   const [removingId, setRemovingId] = useState<number | null>(null);
@@ -93,7 +129,7 @@ export default function AdminGameClient({ gameDay, confirmed, waitlist }: Props)
                     <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 w-8">#</th>
                     <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500">Name</th>
                     <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 hidden md:table-cell">Email</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 hidden lg:table-cell">Signed Up</th>
+                    <th className="text-center px-3 py-2 text-xs font-semibold text-gray-500">Attended</th>
                     <th className="px-4 py-2 w-16"></th>
                   </tr>
                 </thead>
@@ -103,7 +139,9 @@ export default function AdminGameClient({ gameDay, confirmed, waitlist }: Props)
                       <td className="px-4 py-2.5 text-gray-400 font-mono">{i + 1}</td>
                       <td className="px-4 py-2.5 font-medium text-gray-800">{s.name}</td>
                       <td className="px-4 py-2.5 text-gray-500 hidden md:table-cell">{s.email}</td>
-                      <td className="px-4 py-2.5 text-gray-400 text-xs hidden lg:table-cell">{formatSignupTime(s.signed_up_at)}</td>
+                      <td className="px-3 py-2.5 text-center">
+                        <AttendanceToggle signupId={s.id} attended={s.attended} />
+                      </td>
                       <td className="px-4 py-2.5">
                         <button onClick={() => handleRemove(s.id, s.name)} disabled={removingId === s.id}
                           className="text-red-400 hover:text-red-600 text-xs disabled:opacity-50">

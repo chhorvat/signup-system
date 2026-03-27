@@ -26,4 +26,11 @@ function initDb(db: Database.Database): void {
   const schemaPath = path.join(process.cwd(), 'db', 'schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf-8');
   db.exec(schema);
+
+  // Migrations: add columns to existing tables if they don't exist yet
+  const cols = db.prepare("PRAGMA table_info(signups)").all() as { name: string }[];
+  const colNames = cols.map(c => c.name);
+  if (!colNames.includes('attended')) {
+    db.exec("ALTER TABLE signups ADD COLUMN attended INTEGER");
+  }
 }

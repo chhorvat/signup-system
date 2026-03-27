@@ -12,6 +12,7 @@ export interface Signup {
   waitlist_pos: number | null;
   signed_up_at: string;
   notified_at: string | null;
+  attended: number | null; // null=unrecorded, 1=attended, 0=no-show
 }
 
 export interface SignupsForDay {
@@ -137,6 +138,23 @@ export function cancelSignup(token: string): CancelResult {
     gameDayId = signup.game_day_id;
     wasConfirmed = signup.status === 'confirmed';
 
+    // Log the cancellation for accountability tracking
+    const gameDay = db.prepare('SELECT date, time FROM game_days WHERE id = ?').get(gameDayId) as { date: string; time: string } | null;
+    if (gameDay) {
+      const now = new Date();
+      const [h, m] = gameDay.time.split(':').map(Number);
+      const [y, mo, d] = gameDay.date.split('-').map(Number);
+      const gameDateTime = new Date(y, mo - 1, d, h, m, 0);
+      const hoursBefore = (gameDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      const signupDate = new Date(signup.signed_up_at + (signup.signed_up_at.endsWith('Z') ? '' : 'Z'));
+      const signupToCancelMinutes = (now.getTime() - signupDate.getTime()) / (1000 * 60);
+
+      db.prepare(`
+        INSERT INTO cancellation_log (game_day_id, player_email, player_name, game_date, game_time, hours_before, was_confirmed, signup_to_cancel_minutes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(gameDayId, signup.email, signup.name, gameDay.date, gameDay.time, hoursBefore, wasConfirmed ? 1 : 0, signupToCancelMinutes);
+    }
+
     db.prepare('DELETE FROM signups WHERE cancel_token = ?').run(token);
 
     if (wasConfirmed) {
@@ -199,4 +217,11 @@ export function adminRemoveSignup(signupId: number): CancelResult {
   const signup = getSignupById(signupId);
   if (!signup) return { success: false, error: 'Signup not found.' };
   return cancelSignup(signup.cancel_token);
+}
+
+export function markAttendance(signupId: number, attended: boolean | null): boolean {
+  const db = getDb();
+  const val = attended === null ? null : attended ? 1 : 0;
+  const result = db.prepare('UPDATE signups SET attended = ? WHERE id = ?').run(val, signupId);
+  return result.changes > 0;
 }

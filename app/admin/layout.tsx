@@ -10,6 +10,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="text-lg font-bold text-gray-800">Admin</span>
           <span className="text-gray-300">/</span>
           <a href="/admin" className="text-blue-600 hover:underline text-sm">Dashboard</a>
+          <span className="text-gray-300">/</span>
+          <a href="/admin/stats" className="text-blue-600 hover:underline text-sm">Stats</a>
         </div>
         <LogoutButton />
       </div>
