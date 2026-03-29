@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getPlayerStats, getGameCancellationStats } from '@/lib/stats';
 import AdminStatsClient from '@/components/AdminStatsClient';
 

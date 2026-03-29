@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { notFound } from 'next/navigation';
 import { getGameDay } from '@/lib/gameDays';
 import { getSignupsForDay } from '@/lib/signups';

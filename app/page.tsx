@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { listGameDays } from '@/lib/gameDays';
 import { isPast, isToday, parseISO } from 'date-fns';
 import { formatDate, formatTime } from '@/lib/formatters';

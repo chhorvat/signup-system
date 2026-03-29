@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { listGameDays } from '@/lib/gameDays';
 import AdminDashboardClient from '@/components/AdminDashboardClient';
 
