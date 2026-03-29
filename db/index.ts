@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { seedIfEmpty } from './seed';
 
 const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'data', 'signup.db');
 
@@ -32,4 +33,6 @@ function initDb(db: Database.Database): void {
   if (!colNames.includes('attended')) {
     db.exec("ALTER TABLE signups ADD COLUMN attended INTEGER");
   }
+
+  seedIfEmpty(db);
 }
